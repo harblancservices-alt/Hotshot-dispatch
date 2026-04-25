@@ -295,7 +295,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
           <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">
             <div style="background:var(--bg3);border-radius:8px;padding:9px;text-align:center">
               <div class="mono" style="font-size:16px;font-weight:500;color:var(--green)" id="f-gal">0</div>
-              <div style="font-size:11px;color:#ffffff;font-weight:500;margin-top:2px">Miles tracked</div>
+              <div style="font-size:11px;color:#ffffff;font-weight:500;margin-top:2px">Total gallons</div>
             </div>
             <div style="background:var(--bg3);border-radius:8px;padding:9px;text-align:center">
               <div class="mono" style="font-size:16px;font-weight:500;color:var(--green)" id="f-val">$0</div>
@@ -743,18 +743,15 @@ async function drawDetailMap(containerId,load){
 
 // ─ fuel ─
 function fuelStats(){
-  if(!fuelLogs.length) return{cpm:0,totalCost:0,totalMiles:0,ppg:S.defaultPpg||4.20,avgCpm:0};
+  if(!fuelLogs.length) return{cpm:0,totalCost:0,ppg:S.defaultPpg||4.20,avgCpm:0,totalGal:0};
   let totalCost=0,totalGal=0;
   fuelLogs.forEach(f=>{
     totalCost+=parseFloat(f.cost)||0;
     totalGal+=parseFloat(f.gallons)||0;
   });
   const ppg=totalGal>0?(totalCost/totalGal):S.defaultPpg||4.20;
-  const logsWithOdo=fuelLogs.filter(f=>f.odo>0).sort((a,b)=>a.odo-b.odo);
-  const startOdo=logsWithOdo.length?logsWithOdo[0].odo:odo;
-  const totalMiles=Math.max(0,odo-startOdo);
-  const cpm=totalMiles>0?(totalCost/totalMiles):0;
-  return{cpm:cpm.toFixed(3),totalCost:totalCost.toFixed(2),totalMiles,ppg:ppg.toFixed(3),avgCpm:cpm};
+  const cpm=ppg/S.mpg; // cost per mile = avg price per gallon ÷ MPG
+  return{cpm:cpm.toFixed(3),totalCost:totalCost.toFixed(2),ppg:ppg.toFixed(3),avgCpm:cpm,totalGal:totalGal.toFixed(1)};
 }
 
 function fuelCostMiles(miles){
@@ -834,7 +831,7 @@ function renderFuelUI(){
   const dg=document.getElementById('dash-gal');if(dg)dg.textContent='$'+s.cpm;
   const dt=document.getElementById('dash-tankval');if(dt)dt.textContent='$'+s.ppg;
   // fuel page stats
-  const fg=document.getElementById('f-gal');if(fg)fg.textContent=s.totalMiles.toLocaleString()+' mi';
+  const fg=document.getElementById('f-gal');if(fg)fg.textContent=s.totalGal+' gal';
   const fp=document.getElementById('f-ppg');if(fp)fp.textContent='$'+s.ppg;
   const fv=document.getElementById('f-val');if(fv)fv.textContent='$'+s.totalCost;
   const fc=document.getElementById('f-pct');if(fc)fc.textContent='$'+s.cpm;
@@ -871,7 +868,6 @@ function renderFuelLog(){
         ${f.grossCost>0?`<div style="display:flex;justify-content:space-between;font-size:12px"><span style="color:#8892b0">Gross amount</span><span style="font-family:'Roboto Mono',monospace;color:#ffffff">$${parseFloat(f.grossCost).toFixed(2)}</span></div>`:''}
         ${f.discount>0?`<div style="display:flex;justify-content:space-between;font-size:12px"><span style="color:#8892b0">AtoB discount</span><span style="font-family:'Roboto Mono',monospace;color:var(--green)">-$${parseFloat(f.discount).toFixed(2)}</span></div>`:''}
         <div style="display:flex;justify-content:space-between;font-size:12px;border-top:1px solid var(--border);padding-top:7px;margin-top:2px"><span style="font-weight:600;color:#ffffff">Net paid</span><span style="font-family:'Roboto Mono',monospace;font-weight:700;color:var(--green)">$${parseFloat(f.cost).toFixed(2)}</span></div>
-        ${f.odo?`<div style="display:flex;justify-content:space-between;font-size:12px"><span style="color:#8892b0">Odometer</span><span style="font-family:'Roboto Mono',monospace;color:#ffffff">${f.odo.toLocaleString()} mi</span></div>`:''}
         <div style="margin-top:4px">
           <button onclick="event.stopPropagation();deleteFuelEntry(${f.id})" style="font-size:11px;padding:4px 12px;color:var(--red);border:1px solid var(--red);background:transparent;border-radius:6px;cursor:pointer;font-family:'Inter',sans-serif">Delete transaction</button>
         </div>
@@ -1831,7 +1827,6 @@ function parseIFTA(file){
       ppg:headers.indexOf('price per gallon'),
       city:headers.indexOf('merchant city'),
       state:headers.indexOf('merchant state'),
-      odo:headers.indexOf('telematics odometer'),
     };
 
     const parsed=[];
@@ -1853,7 +1848,7 @@ function parseIFTA(file){
       const city=ci.city>=0?cols[ci.city]:'';
       const state=ci.state>=0?cols[ci.state]:'';
       const location=[merchant,city,state].filter(Boolean).join(' — ');
-      const odoVal=ci.odo>=0?parseInt(cols[ci.odo])||0:0;
+      const odoVal=0; // ECM data is unreliable — never use CSV odometer
       parsed.push({
         id:Date.now()+i,
         date:datePart,
@@ -1864,7 +1859,7 @@ function parseIFTA(file){
         discount:parseFloat(discount.toFixed(2)),
         ppg,
         location:location||'AtoB Import',
-        odo:odoVal||odo
+        odo:0
       });
     }
 
