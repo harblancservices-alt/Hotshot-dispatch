@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Harblanc Dispatch</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -231,16 +231,22 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
             style="background:transparent;border:none;color:var(--text);font-family:'Roboto Mono',monospace;font-size:13px;font-weight:500;width:100%;text-align:center;outline:none;padding:0;-moz-appearance:textfield;appearance:textfield">
           <div class="ds-lbl">Odometer</div>
         </div>
-        <div class="ds-item"><div class="ds-val" id="ds-tank">--%</div><div class="ds-lbl">Tank</div></div>
+        <div class="ds-item"><div class="ds-val" id="ds-tank">$--/mi</div><div class="ds-lbl">Fuel $/mi</div></div>
         <div class="ds-item"><div class="ds-val" id="ds-ppg">$--</div><div class="ds-lbl">Avg/gal</div></div>
       </div>
 
       <div class="dash-scroll">
         <div class="card" id="dash-fuel-card">
           <div class="card-title">Fuel</div>
-          <div class="tank-bar"><div class="tank-fill" id="dash-tank-fill" style="width:0%"></div></div>
-          <div style="display:flex;justify-content:space-between;font-size:11px;color:#ffffff;font-weight:500;margin-bottom:8px">
-            <span id="dash-gal">0 gal est.</span><span id="dash-tankval">$0.00 in tank</span>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+            <div>
+              <div style="font-family:'Roboto Mono',monospace;color:var(--green);font-size:20px;font-weight:700" id="dash-gal">$0.000</div>
+              <div style="font-size:11px;color:#ffffff;margin-top:2px">Cost per mile</div>
+            </div>
+            <div style="text-align:right">
+              <div style="font-family:'Roboto Mono',monospace;color:var(--green);font-size:20px;font-weight:700" id="dash-tankval">$0.000</div>
+              <div style="font-size:11px;color:#ffffff;margin-top:2px">Avg $/gal</div>
+            </div>
           </div>
           <button class="btn-g btn-full" onclick="openFuelModal()">+ Log fuel stop</button>
         </div>
@@ -285,23 +291,24 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
     <div class="page" id="page-fuel">
       <div class="padded">
         <div class="card">
-          <div class="card-title">Tank status</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px">
+          <div class="card-title">Fuel cost tracker</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">
             <div style="background:var(--bg3);border-radius:8px;padding:9px;text-align:center">
-              <div class="mono" style="font-size:16px;font-weight:500" id="f-gal">0</div>
-              <div style="font-size:11px;color:#ffffff;font-weight:500;margin-top:2px">Gal est.</div>
+              <div class="mono" style="font-size:16px;font-weight:500;color:var(--green)" id="f-gal">0</div>
+              <div style="font-size:11px;color:#ffffff;font-weight:500;margin-top:2px">Miles tracked</div>
             </div>
             <div style="background:var(--bg3);border-radius:8px;padding:9px;text-align:center">
-              <div class="mono" style="font-size:16px;font-weight:500" id="f-ppg">$0.000</div>
-              <div style="font-size:11px;color:#ffffff;font-weight:500;margin-top:2px">Avg/gal</div>
+              <div class="mono" style="font-size:16px;font-weight:500;color:var(--green)" id="f-val">$0</div>
+              <div style="font-size:11px;color:#ffffff;font-weight:500;margin-top:2px">Total fuel spend</div>
             </div>
             <div style="background:var(--bg3);border-radius:8px;padding:9px;text-align:center">
-              <div class="mono" style="font-size:16px;font-weight:500" id="f-val">$0</div>
-              <div style="font-size:11px;color:#ffffff;font-weight:500;margin-top:2px">Tank val</div>
+              <div class="mono" style="font-size:16px;font-weight:500;color:var(--green)" id="f-pct">$0.000</div>
+              <div style="font-size:11px;color:#ffffff;font-weight:500;margin-top:2px">Cost per mile</div>
             </div>
           </div>
-          <div class="tank-bar"><div class="tank-fill" id="f-tank-bar" style="width:0%"></div></div>
-          <div style="display:flex;justify-content:space-between;font-size:11px;color:#ffffff;font-weight:500;margin-bottom:12px"><span id="f-pct">0%</span><span id="f-cap-lbl">70 gal cap</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:11px;color:#ffffff;font-weight:500;margin-bottom:12px">
+            <span>Avg price/gal: <span id="f-ppg" style="font-family:'Roboto Mono',monospace;color:var(--green)">$0.000</span></span>
+          </div>
           <button class="btn-g btn-full" onclick="openFuelModal()">+ Log fuel stop</button>
         </div>
 
@@ -404,7 +411,6 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
           <div class="fg2">
             <div class="frow full"><div class="flabel">Truck name</div><input type="text" id="s-truckName" placeholder="Harblanc"></div>
             <div class="frow"><div class="flabel">MPG (loaded avg)</div><input type="number" id="s-mpg" step="0.1" placeholder="13"></div>
-            <div class="frow"><div class="flabel">Tank capacity (gal)</div><input type="number" id="s-tankCap" step="1" placeholder="70"></div>
           </div>
         </div>
 
@@ -563,7 +569,8 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
 
 <div class="toast" id="toast"></div>
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>if(typeof L==='undefined'){document.write('<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"><\/script>')}</script>
 <script>
 const SUPA='https://bvmvvbebcvpqqovrsyyd.supabase.co';
 const KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ2bXZ2YmViY3ZwcXFvdnJzeXlkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwNjg4NTYsImV4cCI6MjA5MjY0NDg1Nn0.wSYcN5D2lrW7nuxEWKDl6o3DCs12hCevwv5aOhB0Ros';
@@ -654,6 +661,7 @@ async function init(){
 
 // ─ map ─
 function initMap(){
+  if(typeof L==='undefined'){console.warn('Leaflet not loaded');return;}
   map=L.map('map',{zoomControl:true,attributionControl:false}).setView([pos.lat,pos.lng],11);
   // satellite base
   L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:20}).addTo(map);
@@ -678,9 +686,9 @@ function startGPS(){
 
 async function updatePos(lat,lng){
   pos={lat,lng};
-  dashMarker.setLatLng([lat,lng]);
+  if(dashMarker) dashMarker.setLatLng([lat,lng]);
   if(activeLoad&&activeLoad.destLat) drawRoute();
-  else map.setView([lat,lng],11,{animate:true});
+  else if(map) map.setView([lat,lng],11,{animate:true});
 }
 
 async function geocodeZip(zip){
@@ -693,6 +701,7 @@ async function geocodeZip(zip){
 }
 
 async function drawRoute(){
+  if(!map) return;
   if(routeLine){map.removeLayer(routeLine);}
   if(destMarker){map.removeLayer(destMarker);}
   if(!activeLoad?.destLat) return;
@@ -734,17 +743,25 @@ async function drawDetailMap(containerId,load){
 
 // ─ fuel ─
 function fuelStats(){
-  if(!fuelLogs.length) return{gal:0,ppg:S.defaultPpg||4.20,val:0,pct:0};
-  let totalGal=0,totalCost=0;
-  fuelLogs.forEach(f=>{totalGal+=parseFloat(f.gallons)||0;totalCost+=parseFloat(f.cost)||0;});
-  const ppg=totalGal>0?totalCost/totalGal:S.defaultPpg||4.20;
-  // use lowest odo fuel entry as burn start point
+  if(!fuelLogs.length) return{cpm:0,totalCost:0,totalMiles:0,ppg:S.defaultPpg||4.20,avgCpm:0};
+  let totalCost=0,totalGal=0;
+  fuelLogs.forEach(f=>{
+    totalCost+=parseFloat(f.cost)||0;
+    totalGal+=parseFloat(f.gallons)||0;
+  });
+  const ppg=totalGal>0?(totalCost/totalGal):S.defaultPpg||4.20;
   const logsWithOdo=fuelLogs.filter(f=>f.odo>0).sort((a,b)=>a.odo-b.odo);
   const startOdo=logsWithOdo.length?logsWithOdo[0].odo:odo;
-  const burned=Math.max(0,(odo-startOdo)/S.mpg);
-  const netGal=Math.max(0,Math.min(S.tankCap,totalGal-burned));
-  const pct=Math.round(netGal/S.tankCap*100);
-  return{gal:netGal.toFixed(1),ppg:ppg.toFixed(3),val:(netGal*ppg).toFixed(2),pct};
+  const totalMiles=Math.max(0,odo-startOdo);
+  const cpm=totalMiles>0?(totalCost/totalMiles):0;
+  return{cpm:cpm.toFixed(3),totalCost:totalCost.toFixed(2),totalMiles,ppg:ppg.toFixed(3),avgCpm:cpm};
+}
+
+function fuelCostMiles(miles){
+  const s=fuelStats();
+  const cpm=parseFloat(s.avgCpm)||0;
+  if(cpm>0) return(miles*cpm).toFixed(2);
+  return((miles/S.mpg)*(parseFloat(s.ppg)||S.defaultPpg||4.20)).toFixed(2);
 }
 
 async function deleteFuelEntry(id){
@@ -754,10 +771,6 @@ async function deleteFuelEntry(id){
   toast(ok?'Deleted ✓':'Delete failed',ok?'ok':'err');
 }
 
-function fuelCostMiles(miles){
-  const s=fuelStats();
-  return((miles/S.mpg)*parseFloat(s.ppg||0)).toFixed(2);
-}
 
 function calcProfit(load){
   const gross=parseFloat(load.rate)||0;
@@ -814,16 +827,17 @@ function renderLoadPanel(){
 
 function renderFuelUI(){
   const s=fuelStats();
-  const color=s.pct<20?'linear-gradient(90deg,#5a1010,var(--red))':s.pct<40?'linear-gradient(90deg,#5a3808,var(--amber))':'linear-gradient(90deg,#0f4a28,var(--green))';
-  ['dash-tank-fill','f-tank-bar'].forEach(id=>{const el=document.getElementById(id);if(el){el.style.width=s.pct+'%';el.style.background=color;}});
-  document.getElementById('dash-gal').textContent=s.gal+' gal est.';
-  document.getElementById('dash-tankval').textContent='$'+s.val+' in tank';
-  document.getElementById('ds-tank').textContent=s.pct+'%';
-  document.getElementById('ds-ppg').textContent='$'+s.ppg;
-  document.getElementById('f-gal').textContent=s.gal;
-  document.getElementById('f-ppg').textContent='$'+s.ppg;
-  document.getElementById('f-val').textContent='$'+s.val;
-  document.getElementById('f-pct').textContent=s.pct+'%';
+  // dashboard strip
+  const el=document.getElementById('ds-tank');if(el)el.textContent='$'+s.cpm+'/mi';
+  const el2=document.getElementById('ds-ppg');if(el2)el2.textContent='$'+s.ppg+'/gal';
+  // dashboard fuel card
+  const dg=document.getElementById('dash-gal');if(dg)dg.textContent='$'+s.cpm;
+  const dt=document.getElementById('dash-tankval');if(dt)dt.textContent='$'+s.ppg;
+  // fuel page stats
+  const fg=document.getElementById('f-gal');if(fg)fg.textContent=s.totalMiles.toLocaleString()+' mi';
+  const fp=document.getElementById('f-ppg');if(fp)fp.textContent='$'+s.ppg;
+  const fv=document.getElementById('f-val');if(fv)fv.textContent='$'+s.totalCost;
+  const fc=document.getElementById('f-pct');if(fc)fc.textContent='$'+s.cpm;
 }
 
 function renderFuelLog(){
@@ -873,10 +887,9 @@ function toggleFuelEntry(id){
 }
 
 function renderDashProfit(){
-  const delivered=loadHistory.filter(l=>l.status==='delivered');
-  if(!delivered.length) return;
+  const allLoads=loadHistory.filter(l=>l.rate>0);
   let totalGross=0,totalFuel=0,totalExp=0,totalNet=0,totalMiles=0;
-  delivered.forEach(l=>{
+  allLoads.forEach(l=>{
     const p=calcProfit(l);
     totalGross+=parseFloat(p.gross);
     totalFuel+=parseFloat(p.fuel);
@@ -888,15 +901,13 @@ function renderDashProfit(){
   const rpm=totalMiles>0?(totalGross/totalMiles).toFixed(2):'0.00';
   const ppm=totalMiles>0?(totalNet/totalMiles).toFixed(2):'0.00';
   const fmt=n=>'$'+Math.abs(n).toLocaleString('en',{minimumFractionDigits:0,maximumFractionDigits:0});
-  document.getElementById('dp-gross').textContent=fmt(totalGross);
-  document.getElementById('dp-net').textContent=fmt(totalNet);
-  document.getElementById('dp-net').style.color=totalNet>=0?'var(--green)':'var(--red)';
-  document.getElementById('dp-fuel').textContent=fmt(totalFuel);
-  document.getElementById('dp-exp').textContent=fmt(totalExp);
-  document.getElementById('dp-profit-bar').style.width=Math.max(0,Math.min(100,margin))+'%';
-  document.getElementById('dp-profit-bar').style.background=margin>=50?'var(--green)':margin>=25?'var(--amber)':'var(--red)';
-  document.getElementById('dp-margin').textContent=margin+'% margin';
-  document.getElementById('dp-rpm').textContent='$'+rpm+' gross/mi · $'+ppm+' net/mi';
+  const gpEl=document.getElementById('dp-gross');if(gpEl) gpEl.textContent=fmt(totalGross);
+  const npEl=document.getElementById('dp-net');if(npEl){npEl.textContent=fmt(totalNet);npEl.style.color=totalNet>=0?'var(--green)':'var(--red)';}
+  const fpEl=document.getElementById('dp-fuel');if(fpEl) fpEl.textContent=fmt(totalFuel);
+  const epEl=document.getElementById('dp-exp');if(epEl) epEl.textContent=fmt(totalExp);
+  const pbEl=document.getElementById('dp-profit-bar');if(pbEl){pbEl.style.width=Math.max(0,Math.min(100,margin))+'%';pbEl.style.background=margin>=50?'var(--green)':margin>=25?'var(--amber)':'var(--red)';}
+  const mgEl=document.getElementById('dp-margin');if(mgEl) mgEl.textContent=margin+'% margin';
+  const rmEl=document.getElementById('dp-rpm');if(rmEl) rmEl.textContent='$'+rpm+' gross/mi · $'+ppm+' net/mi';
 }
 
 function renderLoadsPage(){
@@ -1431,7 +1442,7 @@ function switchTab(t){
   document.querySelectorAll('.tb').forEach((b,i)=>b.classList.toggle('on',tabs[i]===t));
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
   document.getElementById('page-'+t).classList.add('on');
-  if(t==='dash') setTimeout(()=>map.invalidateSize(),50);
+  if(t==='dash') setTimeout(()=>{if(map) map.invalidateSize();},50);
   if(t==='watchlist'){renderServiceTracker();renderWatchlist();}
   if(t==='settings') loadSettingsUI();
   if(t==='runs') setTripTodayDate();
@@ -1441,7 +1452,6 @@ function switchTab(t){
 function loadSettingsUI(){
   document.getElementById('s-truckName').value=S.truckName||'Harblanc';
   document.getElementById('s-mpg').value=S.mpg||13;
-  document.getElementById('s-tankCap').value=S.tankCap||70;
   document.getElementById('s-factoring').value=((S.factoring||0.03)*100).toFixed(1);
   document.getElementById('s-ppg').value=S.defaultPpg||4.20;
   document.getElementById('s-oil').value=S.intervals.oil||15000;
@@ -1457,7 +1467,6 @@ function loadSettingsUI(){
 function saveAllSettings(){
   S.truckName=document.getElementById('s-truckName').value.trim()||'Harblanc';
   S.mpg=parseFloat(document.getElementById('s-mpg').value)||13;
-  S.tankCap=parseFloat(document.getElementById('s-tankCap').value)||70;
   S.factoring=(parseFloat(document.getElementById('s-factoring').value)||3)/100;
   S.defaultPpg=parseFloat(document.getElementById('s-ppg').value)||4.20;
   S.intervals.oil=parseInt(document.getElementById('s-oil').value)||15000;
