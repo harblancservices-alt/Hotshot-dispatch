@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hotshot Dispatch</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0f1117;--bg2:#181c27;--bg3:#1e2330;
+  --border:#252b3b;--text:#f0f2f7;--muted:#6b7494;
+  --accent:#34d47e;--warn:#f0a500;--danger:#e84444;--info:#4e9ef5;
+}
+body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-size:15px;min-height:100vh;-webkit-font-smoothing:antialiased}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;background:var(--bg2);border-bottom:1px solid var(--border)}
+.logo{font-size:14px;font-weight:600;letter-spacing:.02em}
+.logo span{color:var(--accent)}
+.sync{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--accent);animation:blink 2s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.tabs{display:flex;background:var(--bg2);border-bottom:1px solid var(--border);padding:0 16px}
+.tab{padding:12px 16px;font-size:14px;font-weight:500;color:var(--muted);border:none;background:transparent;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px}
+.tab.active{color:var(--text);border-bottom-color:var(--accent)}
+.tab:hover{color:var(--text)}
+.main{padding:16px;max-width:680px;margin:0 auto}
+.pg{display:none}.pg.active{display:block}
+.odo-bar{display:flex;align-items:center;gap:10px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:12px 16px;margin-bottom:14px}
+.odo-bar label{font-size:13px;color:var(--muted);white-space:nowrap}
+.odo-bar input{background:transparent;border:none;color:var(--text);font-family:'Roboto Mono',monospace;font-size:18px;font-weight:500;outline:none;width:130px}
+.odo-bar span{font-size:13px;color:var(--muted)}
+.alert-strip{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.alert-chip{padding:6px 14px;border-radius:20px;font-size:13px;font-weight:500;cursor:pointer;border:1px solid transparent}
+.chip-danger{background:#2a1212;color:var(--danger);border-color:#3a1818}
+.chip-warn{background:#221a08;color:var(--warn);border-color:#332608}
+.chip-ok{background:#0f2218;color:var(--accent);border-color:#1a3828}
+.toolbar{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.toolbar input,.toolbar select{font-size:13px;background:var(--bg2);border:1px solid var(--border);border-radius:7px;color:var(--text);padding:7px 11px;outline:none;font-family:'Inter',sans-serif}
+.toolbar input{flex:1;min-width:140px}
+.toolbar select{width:auto}
+.section{margin-bottom:6px}
+.section-hdr{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;cursor:pointer;user-select:none}
+.section-hdr:hover{border-color:#2e3550}
+.section-name{font-weight:500;font-size:14px;flex:1}
+.section-count{font-size:12px;color:var(--muted)}
+.chev{font-size:11px;color:var(--muted);transition:transform .15s}
+.chev.open{transform:rotate(90deg)}
+.section-items{display:flex;flex-direction:column;gap:3px;margin-top:3px}
+.item-row{display:flex;align-items:center;gap:12px;padding:11px 14px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;cursor:pointer;transition:border-color .12s}
+.item-row:hover{border-color:#2e3550}
+.item-row.due{border-left:3px solid var(--danger)}
+.item-row.soon{border-left:3px solid var(--warn)}
+.item-row.na{opacity:.38}
+.item-row.open-top{border-radius:8px 8px 0 0}
+.item-name{flex:1;font-size:14px;font-weight:500}
+.item-miles{font-family:'Roboto Mono',monospace;font-size:13px;white-space:nowrap}
+.m-ok{color:var(--muted)}.m-soon{color:var(--warn)}.m-due{color:var(--danger)}
+.sdot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.sd-ok{background:var(--accent)}.sd-soon{background:var(--warn)}.sd-due{background:var(--danger)}.sd-inspect{background:var(--info)}.sd-na{background:var(--border)}
+.item-detail{background:var(--bg3);border:1px solid var(--border);border-top:none;border-radius:0 0 8px 8px;padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+.det-row{display:flex;justify-content:space-between;font-size:13px;gap:10px}
+.det-lbl{color:var(--muted)}
+.det-val{text-align:right}
+.det-pn{font-family:'Roboto Mono',monospace;font-size:12px;color:var(--info);line-height:1.65}
+.det-note{font-size:12px;color:var(--muted);line-height:1.6}
+.det-actions{display:flex;gap:8px;flex-wrap:wrap}
+.det-hist{border-top:1px solid var(--border);padding-top:10px}
+.hist-ttl{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+.hist-row{display:flex;gap:10px;font-size:12px;color:var(--muted);padding:4px 0;border-bottom:1px solid var(--border);align-items:baseline}
+.hist-row:last-child{border-bottom:none}
+.hist-row span{color:var(--text)}
+button{cursor:pointer;font-family:'Inter',sans-serif;font-size:13px;border-radius:7px;border:1px solid var(--border);background:transparent;color:var(--muted);padding:6px 13px;transition:all .12s}
+button:hover{background:var(--bg3);color:var(--text)}
+.btn-ok{background:#0f2218;color:var(--accent);border-color:#1e3d28}
+.btn-ok:hover{opacity:.85}
+.btn-log{color:var(--info);border-color:#1a2a40}
+.btn-log:hover{background:#0d1520}
+.btn-na{color:var(--muted)}
+.btn-na.on{color:var(--warn);border-color:#332608;background:#221a08}
+.btn-del{color:var(--danger);border-color:transparent}
+.btn-del:hover{border-color:var(--danger);background:#2a1212}
+.copy-btn{font-size:11px;padding:2px 8px;color:var(--info);border-color:transparent}
+.copy-btn:hover{background:#151e30;border:1px solid var(--info)}
+.log-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-bottom:14px}
+.stat-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:12px 14px}
+.stat-val{font-size:22px;font-weight:600;font-family:'Roboto Mono',monospace;line-height:1}
+.stat-lbl{font-size:11px;color:var(--muted);margin-top:3px}
+.log-entries{display:flex;flex-direction:column;gap:5px}
+.log-entry{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;cursor:pointer}
+.log-entry:hover{border-color:#2e3550}
+.log-top{display:flex;align-items:center;gap:10px}
+.log-name{flex:1;font-size:14px;font-weight:500}
+.log-cost{font-family:'Roboto Mono',monospace;font-size:14px;font-weight:500;color:var(--accent)}
+.log-meta{display:flex;gap:10px;font-size:12px;color:var(--muted);margin-top:4px;flex-wrap:wrap}
+.log-expanded{padding-top:10px;margin-top:10px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:6px;font-size:13px}
+.le-row{display:flex;gap:8px}
+.le-lbl{color:var(--muted);width:76px;flex-shrink:0;font-size:12px}
+.tag{background:var(--bg3);color:var(--muted);font-size:11px;padding:2px 8px;border-radius:4px;font-family:'Roboto Mono',monospace}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:flex-start;justify-content:center;padding:40px 16px;z-index:100;overflow-y:auto}
+.modal{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:22px;width:100%;max-width:460px}
+.modal-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+.modal-title{font-size:16px;font-weight:600}
+.modal-close{font-size:18px;color:var(--muted);border:none;background:none;cursor:pointer;padding:0 4px}
+.fg{display:flex;flex-direction:column;gap:10px}
+.fr{display:flex;gap:10px}
+.fr .frow{flex:1}
+.frow{display:flex;flex-direction:column;gap:4px}
+.flabel{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.frow input,.frow select,.frow textarea{background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--text);font-family:'Inter',sans-serif;font-size:14px;padding:8px 11px;outline:none;width:100%}
+.frow input:focus,.frow select:focus,.frow textarea:focus{border-color:#3a4560}
+.modal-btns{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
+.toast{position:fixed;bottom:24px;right:24px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 16px;font-size:13px;z-index:200;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.show{opacity:1}
+.toast.ok{color:var(--accent);border-color:#1e3d28}
+.toast.err{color:var(--danger);border-color:var(--danger)}
+.empty{color:var(--muted);font-size:14px;padding:32px 0;text-align:center}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo">HOTSHOT <span>DISPATCH</span></div>
+  <div class="sync"><div class="dot" id="dot"></div><span id="sync-txt">Connecting...</span></div>
+</div>
+
+<div class="tabs">
+  <button class="tab active" onclick="switchTab('schedule')">Schedule</button>
+  <button class="tab" onclick="switchTab('log')">Repair Log</button>
+</div>
+
+<div class="main">
+
+<div class="pg active" id="pg-schedule">
+  <div class="odo-bar">
+    <label>Odometer</label>
+    <input type="number" id="odo" value="186260" oninput="renderSchedule()">
+    <span>mi</span>
+  </div>
+  <div class="alert-strip" id="alert-strip"></div>
+  <div class="toolbar">
+    <input type="text" id="sched-search" placeholder="Search..." oninput="renderSchedule()">
+    <select id="sched-filter" onchange="renderSchedule()">
+      <option value="">All</option>
+      <option value="due">Overdue</option>
+      <option value="soon">Due soon</option>
+      <option value="ok">OK</option>
+    </select>
+  </div>
+  <div id="sched-body"></div>
+</div>
+
+<div class="pg" id="pg-log">
+  <div class="log-stats" id="log-stats"></div>
+  <div class="toolbar">
+    <input type="text" id="log-search" placeholder="Search log..." oninput="renderLog()">
+    <select id="log-filter" onchange="renderLog()">
+      <option value="">All sections</option>
+      <option>Engine</option><option>Fuel system</option><option>Emissions / DEF</option>
+      <option>Cooling</option><option>Drivetrain</option><option>Brakes</option>
+      <option>Suspension / steering</option><option>Electrical</option>
+      <option>Tires</option><option>Hitch / trailer</option><option>Other</option>
+    </select>
+    <button class="btn-ok" onclick="openModal()">+ Add</button>
+    <button onclick="exportCSV()" style="font-size:12px">Export ↓</button>
+  </div>
+  <div class="log-entries" id="log-body"></div>
+</div>
+
+</div>
+
+<div class="modal-bg" id="modal" style="display:none" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="modal-hdr">
+      <div class="modal-title" id="modal-ttl">Log service</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="fg">
+      <div class="fr">
+        <div class="frow"><div class="flabel">Date</div><input type="text" id="f-date"></div>
+        <div class="frow"><div class="flabel">Odometer</div><input type="number" id="f-odo"></div>
+      </div>
+      <div class="frow">
+        <div class="flabel">Section</div>
+        <select id="f-sec" onchange="populateItems()">
+          <option value="">— select —</option>
+          <option>Engine</option><option>Fuel system</option><option>Emissions / DEF</option>
+          <option>Cooling</option><option>Drivetrain</option><option>Brakes</option>
+          <option>Suspension / steering</option><option>Electrical</option>
+          <option>Tires</option><option>Hitch / trailer</option><option>Other</option>
+        </select>
+      </div>
+      <div class="frow">
+        <div class="flabel">Item</div>
+        <select id="f-link"><option value="">— select item —</option></select>
+      </div>
+      <div class="frow"><div class="flabel">Description</div><input type="text" id="f-item" placeholder="What was done"></div>
+      <div class="fr">
+        <div class="frow"><div class="flabel">Cost ($)</div><input type="number" id="f-cost" step="0.01" placeholder="0.00"></div>
+        <div class="frow"><div class="flabel">Labor hrs</div><input type="number" id="f-labor" step="0.5" placeholder="0"></div>
+      </div>
+      <div class="fr">
+        <div class="frow"><div class="flabel">Shop / vendor</div><input type="text" id="f-shop" placeholder="e.g. Self, O'Reilly"></div>
+        <div class="frow"><div class="flabel">Warranty (mi)</div><input type="number" id="f-warranty" placeholder="optional"></div>
+      </div>
+      <div class="frow"><div class="flabel">Part numbers used</div><input type="text" id="f-pn" placeholder="optional"></div>
+      <div class="frow"><div class="flabel">Notes</div><textarea id="f-notes" rows="2" placeholder="Condition found, observations..."></textarea></div>
+    </div>
+    <div class="modal-btns">
+      <button onclick="closeModal()">Cancel</button>
+      <button class="btn-ok" onclick="saveEntry()">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SUPA_URL='https://bvmvvbebcvpqqovrsyyd.supabase.co';
+const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ2bXZ2YmViY3ZwcXFvdnJzeXlkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwNjg4NTYsImV4cCI6MjA5MjY0NDg1Nn0.wSYcN5D2lrW7nuxEWKDl6o3DCs12hCevwv5aOhB0Ros';
+const H={'Content-Type':'application/json','apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY};
+
+async function dbGet(t){const r=await fetch(`${SUPA_URL}/rest/v1/${t}?order=created_at.desc`,{headers:{...H,'Prefer':'return=representation'}});return r.ok?r.json():[];}
+async function dbUpsert(t,d){const r=await fetch(`${SUPA_URL}/rest/v1/${t}`,{method:'POST',headers:{...H,'Prefer':'resolution=merge-duplicates,return=representation'},body:JSON.stringify(d)});return r.ok;}
+async function dbDel(t,id){const r=await fetch(`${SUPA_URL}/rest/v1/${t}?id=eq.${id}`,{method:'DELETE',headers:H});return r.ok;}
+
+const SECTIONS=[
+  {id:'engine',name:'Engine',items:[
+    {id:'oil',name:'Engine oil & filter',interval:5000,pn:'Fleetguard LF16035 · MOPAR 68210509AA (drain plug)',note:'5W-40 CK-4 synthetic, 12 qts. Severe/hotshot duty every 5,000 mi.'},
+    {id:'ccv',name:'Crankcase vent filter',interval:75000,pn:'MOPAR 68002433AB · Fleetguard CV520010',note:'Replace at 75k mi or as indicated by vehicle display.'},
+    {id:'air',name:'Air filter',interval:30000,pn:'MOPAR 53034051AB · Fleetguard AF27684',note:'Inspect every oil change. Replace at 30k or sooner.'},
+    {id:'belt',name:'Serpentine belt',interval:100000,pn:'MOPAR 5281816AA (single alt) · MOPAR 5281817AA (dual alt)',note:'Replace tensioner and idler at same time.'},
+    {id:'tensioner',name:'Belt tensioner & idler',interval:100000,pn:'Gates 38285 (tensioner)',note:'Replace with belt at 100k.'},
+  ]},
+  {id:'fuel',name:'Fuel system',items:[
+    {id:'fuel1',name:'Fuel filter — primary',interval:15000,pn:'MOPAR 68157291AA · Fleetguard FS53000',note:'Drain water separator at every oil change.'},
+    {id:'fuel2',name:'Fuel filter — secondary',interval:15000,pn:'MOPAR 68436631AA',note:'Replace both filters together. Carry a spare on long hauls.'},
+  ]},
+  {id:'emissions',name:'Emissions / DEF',items:[
+    {id:'def',name:'DEF level & system check',interval:15000,pn:'API-certified DEF fluid',note:'Keep above 1/4 tank. Low DEF triggers engine derates.'},
+    {id:'dpf',name:'DPF forced regen',interval:0,pn:'N/A — lamp triggered',note:'Complete parked regen when DPF lamp appears.'},
+    {id:'egr',name:'EGR valve & cooler',interval:60000,pn:'MOPAR 68211809AA (valve) · MOPAR 68210961AA (cooler)',note:'Inspect for carbon buildup and coolant leaks at 60k.'},
+  ]},
+  {id:'cooling',name:'Cooling',items:[
+    {id:'coolant',name:'Coolant flush',interval:150000,pn:'Mopar HOAT · Stant 14289 (thermostat) · MOPAR 5086740AA (gasket)',note:'150k first change then every 50k. Replace thermostat, both hoses, cap.'},
+    {id:'rad_u',name:'Upper radiator hose',interval:150000,pn:'MOPAR 68359598',note:'Replace at coolant flush.'},
+    {id:'rad_l',name:'Lower radiator hose',interval:150000,pn:'MOPAR 68359638',note:'Replace at coolant flush.'},
+    {id:'waterpump',name:'Water pump',interval:150000,pn:'MOPAR 68210961AA · Gates 42133',note:'Inspect for weeping at every oil change.'},
+  ]},
+  {id:'drivetrain',name:'Drivetrain',items:[
+    {id:'trans',name:'Transmission fluid & filter',interval:30000,pn:'MOPAR 68224232AA (filter) · MOPAR 68214914AA (gasket) · Mopar ATF+4',note:'Aisin AS69RC. Hotshot = severe duty always. Do not skip.'},
+    {id:'tc',name:'Transfer case fluid',interval:30000,pn:'Mopar Transfer Case Fluid — ~1.5 qts',note:'Severe duty every 30k.'},
+    {id:'fdiff',name:'Front diff fluid',interval:20000,pn:'Mopar 75W-140 GL-5 — ~2.5 pts · Fel-Pro RDS55474 (gasket)',note:'AAM 9.25". Inspect for metal flakes.'},
+    {id:'rdiff',name:'Rear diff fluid',interval:20000,pn:'Mopar 75W-140 GL-5 — ~4 pts · Fel-Pro RDS55473 (gasket)',note:'AAM 11.5". Hotshot loads stress ring & pinion.'},
+    {id:'axle_uj',name:'Front axle U-joints (grease)',interval:15000,pn:'Mopar Multi-Mileage Grease NLGI #2',note:'Grease every other oil change via zerk fittings.'},
+    {id:'ds_uj',name:'Driveshaft U-joints (grease)',interval:15000,pn:'Spicer SPL70-4X (front) · SPL55-4X (rear)',note:'Grease every 15k. Inspect slip yoke.'},
+  ]},
+  {id:'brakes',name:'Brakes',items:[
+    {id:'brake_f',name:'Front brakes',interval:12000,pn:'MOPAR 68402631AA (pads) · MOPAR 68402628AA (rotors)',note:'Heavy towing accelerates wear. Measure rotor thickness.'},
+    {id:'brake_r',name:'Rear brakes',interval:12000,pn:'MOPAR 68402633AA (pads) · MOPAR 68402630AA (rotors)',note:'Check caliper slides. Rear brakes carry trailer surge load.'},
+    {id:'brake_fl',name:'Brake fluid',interval:30000,pn:'DOT 3 · MOPAR 5080245AB (master cyl cap)',note:'Test for moisture. Flush if boiling point degraded.'},
+  ]},
+  {id:'suspension',name:'Suspension / steering',items:[
+    {id:'trackbar',name:'Track bar & bushings',interval:0,pn:'MOPAR 68236251AB (bar) · MOPAR 68236252AB (frame bushing) · MOPAR 52114204AB (axle bushing)',note:'Inspect for play. Worn bushings cause death wobble.'},
+    {id:'uca',name:'Upper control arm & ball joint',interval:0,pn:'MOPAR 68214646AA (ball joint) · MOPAR 68036726AA (arm) · MOPAR 52113965AD (bushings)',note:'Inspect for play with wheel lifted.'},
+    {id:'lbj',name:'Lower ball joint',interval:0,pn:'MOPAR 5086674AB · Moog K7467',note:'Pressed into knuckle. Inspect boot condition.'},
+    {id:'tierod_i',name:'Inner tie rod ends',interval:0,pn:'MOPAR 68036726AC · Moog ES800558',note:'Replace in pairs.'},
+    {id:'tierod_o',name:'Outer tie rod ends',interval:0,pn:'MOPAR 68214646AB · Moog ES800532',note:'Check castle nut and cotter pin.'},
+    {id:'swaybar_b',name:'Sway bar bushings',interval:0,pn:'MOPAR 52114118AB (32mm) · Energy Suspension 5.5174',note:'Clunk over bumps = worn bushings.'},
+    {id:'swaybar_l',name:'Sway bar end links',interval:0,pn:'MOPAR 52114300AC · Synergy 8034',note:'Inspect for play and torn boots.'},
+    {id:'shocks_f',name:'Front shocks',interval:0,pn:'MOPAR 68060998AC · Bilstein 5100 24-186747',note:'Inspect for leaking and excessive bounce.'},
+    {id:'shocks_r',name:'Rear shocks',interval:0,pn:'MOPAR 68273826AB · Bilstein 5100 24-186748',note:'Inspect loaded. Hard on gooseneck hauls.'},
+    {id:'leafspring',name:'Leaf springs & U-bolts',interval:0,pn:'MOPAR 68189049AD (driver) · MOPAR 68189050AD (pass.) · MOPAR 52113831AB (U-bolts)',note:'Re-torque U-bolts to 175 ft-lbs after 500 mi on new springs.'},
+    {id:'steer_stab',name:'Steering stabilizer',interval:0,pn:'MOPAR 52059883AE · Bilstein 33-187788',note:'Inspect for leaking and worn bushings.'},
+    {id:'wheel_bear',name:'Wheel bearings',interval:0,pn:'MOPAR 68089696AB (driver) · MOPAR 68089697AB (pass.)',note:'Hub bolt torque: 120 ft-lbs.'},
+  ]},
+  {id:'tires',name:'Tires',items:[
+    {id:'tire_rot',name:'Tire rotation',interval:6000,pn:'TPMS: MOPAR 68241067AC',note:'80 psi rear at GVWR, 65 psi front.'},
+    {id:'tire_insp',name:'Tire & valve stem inspection',interval:12000,pn:'Dill TR414C (valve stems)',note:'Inspect sidewalls for cracking and bulges.'},
+  ]},
+  {id:'hitch',name:'Hitch / trailer',items:[
+    {id:'hitch_b',name:'Hitch ball & coupler',interval:10000,pn:'Mopar Multi-Mileage Grease',note:'Grease ball at every load.'},
+    {id:'gooseneck',name:'Gooseneck / 5th wheel',interval:10000,pn:'Curt 60630 (ball) · SAE 90 gear oil (kingpin)',note:'Lubricate kingpin at every load.'},
+    {id:'trailer_brk',name:'Trailer brake controller',interval:12000,pn:'Tekonsha Prodigy P3',note:'Check gain and output each seasonal change.'},
+    {id:'trailer_wir',name:'Trailer wiring & connector',interval:10000,pn:'MOPAR 82215040AB (7-pin) · Permatex 22058 (dielectric)',note:'Test all lights before every load.'},
+  ]},
+];
+
+let state={},logEntries=[],editId=null;
+const expanded={},secCollapsed={};
+
+async function init(){
+  setSyncStatus('Connecting...',false);
+  try{
+    const[sr,lr]=await Promise.all([dbGet('pm_state'),dbGet('repair_log')]);
+    sr.forEach(r=>{state[r.id]={lastDone:r.last_done,na:r.na};});
+    logEntries=lr.map(r=>({id:r.id,date:r.date,odo:r.odo,item:r.item,type:r.type,cost:parseFloat(r.cost)||0,pn:r.pn,notes:r.notes,link:r.link,shop:r.shop,labor:parseFloat(r.labor)||0,warranty:r.warranty}));
+    setSyncStatus('Synced',true);
+    renderSchedule();renderLog();
+  }catch(e){setSyncStatus('Offline',false,true);}
+}
+
+function setSyncStatus(txt,ok,err=false){
+  document.getElementById('sync-txt').textContent=txt;
+  const d=document.getElementById('dot');
+  d.style.background=err?'var(--danger)':ok?'var(--accent)':'var(--warn)';
+  d.style.animation=err?'none':'blink 2s infinite';
+}
+
+function odo(){return parseInt(document.getElementById('odo').value)||0;}
+
+function getStatus(item,o){
+  if(item.interval===0)return{status:'inspect',pct:0,remaining:null,nextDue:null};
+  const st=state[item.id]||{};
+  if(st.na)return{status:'na'};
+  const base=st.lastDone!==undefined?st.lastDone:Math.floor(o/item.interval)*item.interval;
+  const nextDue=base+item.interval;
+  const remaining=nextDue-o;
+  const pct=Math.min(100,Math.round((o-base)/item.interval*100));
+  return{status:remaining<=0?'due':remaining<=item.interval*.12?'soon':'ok',pct,remaining:Math.round(remaining),nextDue:Math.round(nextDue)};
+}
+
+function fmt(n){return Math.round(n).toLocaleString();}
+function fmtc(n){return '$'+parseFloat(n).toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:2});}
+
+function renderSchedule(){
+  const o=odo();
+  const q=(document.getElementById('sched-search').value||'').toLowerCase();
+  const sf=document.getElementById('sched-filter').value;
+  let dueT=0,soonT=0,okT=0;
+  SECTIONS.forEach(sec=>sec.items.forEach(it=>{
+    const{status}=getStatus(it,o);
+    if(status==='due')dueT++;else if(status==='soon')soonT++;else if(status==='ok')okT++;
+  }));
+  document.getElementById('alert-strip').innerHTML=
+    (dueT?`<div class="alert-chip chip-danger" onclick="document.getElementById('sched-filter').value='due';renderSchedule()">${dueT} overdue</div>`:'')+
+    (soonT?`<div class="alert-chip chip-warn" onclick="document.getElementById('sched-filter').value='soon';renderSchedule()">${soonT} due soon</div>`:'')+
+    `<div class="alert-chip chip-ok" onclick="document.getElementById('sched-filter').value='';renderSchedule()">${okT} OK</div>`;
+
+  let html='';
+  SECTIONS.forEach(sec=>{
+    const isOpen=!secCollapsed[sec.id];
+    const filtered=sec.items.filter(it=>{
+      const{status}=getStatus(it,o);
+      if(sf&&status!==sf)return false;
+      if(q&&!(it.name.toLowerCase().includes(q)||it.pn.toLowerCase().includes(q)))return false;
+      return true;
+    });
+    if(!filtered.length)return;
+    let sd=0,ss=0;
+    filtered.forEach(it=>{const{status}=getStatus(it,o);if(status==='due')sd++;if(status==='soon')ss++;});
+    const mc=sd?'var(--danger)':ss?'var(--warn)':'var(--muted)';
+    const mt=sd?`${sd} overdue`:ss?`${ss} due soon`:`${filtered.length}`;
+
+    html+=`<div class="section">
+      <div class="section-hdr" onclick="toggleSec('${sec.id}')">
+        <span class="section-name">${sec.name}</span>
+        <span class="section-count" style="color:${mc}">${mt}</span>
+        <span class="chev ${isOpen?'open':''}">▶</span>
+      </div>
+      <div class="section-items" style="display:${isOpen?'flex':'none'}">`;
+
+    filtered.forEach(it=>{
+      const{status,remaining,nextDue}=getStatus(it,o);
+      const st=state[it.id]||{};
+      const isNA=st.na,isExp=expanded[it.id];
+      let dc='sd-ok',rc='';
+      if(isNA){dc='sd-na';rc='na';}
+      else if(status==='due'){dc='sd-due';rc='due';}
+      else if(status==='soon'){dc='sd-soon';rc='soon';}
+      else if(status==='inspect'){dc='sd-inspect';}
+
+      let miHtml='';
+      if(it.interval>0&&!isNA){
+        const mc=remaining<=0?'m-due':remaining<=it.interval*.12?'m-soon':'m-ok';
+        miHtml=`<div class="item-miles ${mc}">${remaining<=0?'−'+fmt(Math.abs(remaining)):'+'+fmt(remaining)} mi</div>`;
+      }else if(status==='inspect'&&!isNA){
+        miHtml=`<div class="item-miles" style="color:var(--info);font-size:12px">inspect</div>`;
+      }
+
+      const itemLogs=logEntries.filter(e=>e.link===it.id);
+      let detHtml='';
+      if(isExp){
+        detHtml=`<div class="item-detail">
+          ${it.interval>0&&!isNA?`
+            <div class="det-row"><span class="det-lbl">Interval</span><span class="det-val">${fmt(it.interval)} mi</span></div>
+            <div class="det-row"><span class="det-lbl">Last done</span><span class="det-val">${st.lastDone!==undefined?fmt(st.lastDone)+' mi':'Not recorded'}</span></div>
+            <div class="det-row"><span class="det-lbl">Next due</span><span class="det-val">${nextDue?fmt(nextDue)+' mi':'—'}</span></div>
+          `:''}
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <span class="det-lbl">Part numbers</span>
+            <span class="det-pn">${it.pn} <button class="copy-btn" onclick="event.stopPropagation();copyText('${it.pn.replace(/'/g,"\\'").replace(/"/g,'&quot;')}')">Copy</button></span>
+          </div>
+          <div class="det-note">${it.note}</div>
+          <div class="det-actions">
+            ${it.interval>0?`<button class="btn-ok" onclick="event.stopPropagation();markDone('${it.id}',${o})">Mark done</button>`:''}
+            <button class="btn-log" onclick="event.stopPropagation();openFromPM('${it.id}','${it.name.replace(/'/g,"\\'")}','${sec.name}')">Log + cost ↗</button>
+            <button class="btn-na ${isNA?'on':''}" onclick="event.stopPropagation();toggleNA('${it.id}')">${isNA?'Re-enable':'Mark N/A'}</button>
+          </div>
+          ${itemLogs.length?`<div class="det-hist">
+            <div class="hist-ttl">Service history</div>
+            ${itemLogs.slice(0,5).map(e=>`<div class="hist-row"><span>${e.date}</span><span>${fmt(e.odo)} mi</span><span style="color:var(--accent)">${e.cost>0?fmtc(e.cost):''}</span><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted)">${e.shop||e.item||''}</span></div>`).join('')}
+          </div>`:''}
+        </div>`;
+      }
+
+      html+=`<div>
+        <div class="item-row ${rc}${isExp?' open-top':''}" onclick="toggleItem('${it.id}')">
+          <div class="sdot ${dc}"></div>
+          <div class="item-name">${it.name}</div>
+          ${miHtml}
+        </div>
+        ${detHtml}
+      </div>`;
+    });
+    html+=`</div></div>`;
+  });
+  if(!html)html='<div class="empty">Nothing matches.</div>';
+  document.getElementById('sched-body').innerHTML=html;
+}
+
+function toggleSec(id){secCollapsed[id]=!secCollapsed[id];renderSchedule();}
+function toggleItem(id){expanded[id]=!expanded[id];renderSchedule();}
+
+async function markDone(id,o){
+  state[id]={...(state[id]||{}),lastDone:o,na:false};
+  renderSchedule();
+  const ok=await dbUpsert('pm_state',{id,last_done:o,na:false,updated_at:new Date().toISOString()});
+  toast(ok?'Saved ✓':'Save failed',ok?'ok':'err');
+}
+
+async function toggleNA(id){
+  state[id]=state[id]||{};state[id].na=!state[id].na;
+  renderSchedule();
+  const ok=await dbUpsert('pm_state',{id,last_done:state[id].lastDone||null,na:state[id].na,updated_at:new Date().toISOString()});
+  toast(ok?'Saved ✓':'Save failed',ok?'ok':'err');
+}
+
+function copyText(t){navigator.clipboard.writeText(t).then(()=>toast('Copied ✓','ok'));}
+
+function switchTab(t){
+  document.querySelectorAll('.tab').forEach((b,i)=>b.classList.toggle('active',['schedule','log'][i]===t));
+  document.querySelectorAll('.pg').forEach(p=>p.classList.remove('active'));
+  document.getElementById('pg-'+t).classList.add('active');
+}
+
+function renderLog(){
+  const q=(document.getElementById('log-search').value||'').toLowerCase();
+  const cat=document.getElementById('log-filter').value;
+  const filtered=logEntries.filter(e=>{
+    if(cat&&e.type!==cat)return false;
+    if(q&&![(e.item||''),(e.shop||''),(e.notes||''),(e.pn||'')].some(s=>s.toLowerCase().includes(q)))return false;
+    return true;
+  });
+  const total=logEntries.reduce((s,e)=>s+e.cost,0);
+  const labor=logEntries.reduce((s,e)=>s+(e.labor||0),0);
+  const o=odo();
+  const span=logEntries.length?Math.max(...logEntries.map(e=>e.odo)):o;
+  document.getElementById('log-stats').innerHTML=`
+    <div class="stat-card"><div class="stat-val">$${total.toLocaleString('en',{maximumFractionDigits:0})}</div><div class="stat-lbl">Total spend</div></div>
+    <div class="stat-card"><div class="stat-val">${logEntries.length}</div><div class="stat-lbl">Entries</div></div>
+    <div class="stat-card"><div class="stat-val">${span?'$'+(total/span).toFixed(3):'-'}</div><div class="stat-lbl">Cost per mile</div></div>
+    <div class="stat-card"><div class="stat-val">${labor.toFixed(1)}h</div><div class="stat-lbl">Labor</div></div>
+  `;
+  if(!filtered.length){document.getElementById('log-body').innerHTML='<div class="empty">No entries yet. Hit + Add to log your first service.</div>';return;}
+  document.getElementById('log-body').innerHTML=filtered.map(e=>{
+    const isExp=expanded['log-'+e.id];
+    const warnActive=e.warranty&&e.warranty>=o;
+    return`<div class="log-entry" onclick="expanded['log-${e.id}']=!expanded['log-${e.id}'];renderLog()">
+      <div class="log-top">
+        <div class="log-name">${e.item}</div>
+        <div class="log-cost">${e.cost>0?fmtc(e.cost):'—'}</div>
+      </div>
+      <div class="log-meta">
+        <span>${e.date}</span>
+        <span>${fmt(e.odo)} mi</span>
+        ${e.shop?`<span>${e.shop}</span>`:''}
+        ${e.type?`<span class="tag">${e.type}</span>`:''}
+        ${warnActive?`<span style="color:var(--accent);font-size:11px;font-family:'Roboto Mono',monospace">warranty to ${fmt(e.warranty)} mi</span>`:''}
+      </div>
+      ${isExp?`<div class="log-expanded">
+        ${e.pn?`<div class="le-row"><span class="le-lbl">Parts</span><span style="font-family:'Roboto Mono',monospace;font-size:12px;color:var(--info)">${e.pn}</span></div>`:''}
+        ${e.labor?`<div class="le-row"><span class="le-lbl">Labor</span><span>${e.labor} hrs</span></div>`:''}
+        ${e.notes?`<div class="le-row"><span class="le-lbl">Notes</span><span>${e.notes}</span></div>`:''}
+        <div style="display:flex;gap:8px;margin-top:4px">
+          <button onclick="event.stopPropagation();editEntry(${e.id})">Edit</button>
+          <button class="btn-del" onclick="event.stopPropagation();delEntry(${e.id})">Delete</button>
+        </div>
+      </div>`:''}
+    </div>`;
+  }).join('');
+}
+
+function openModal(pre){
+  editId=null;
+  const today=new Date();
+  document.getElementById('f-date').value=pre&&pre.date?pre.date:`${String(today.getMonth()+1).padStart(2,'0')}/${String(today.getDate()).padStart(2,'0')}/${today.getFullYear()}`;
+  document.getElementById('f-odo').value=pre&&pre.odo?pre.odo:odo();
+  document.getElementById('f-item').value=pre&&pre.item?pre.item:'';
+  document.getElementById('f-sec').value=pre&&pre.type?pre.type:'';
+  document.getElementById('f-cost').value='';
+  document.getElementById('f-labor').value='';
+  document.getElementById('f-pn').value='';
+  document.getElementById('f-shop').value='';
+  document.getElementById('f-warranty').value='';
+  document.getElementById('f-notes').value='';
+  populateItems();
+  if(pre&&pre.link)setTimeout(()=>{document.getElementById('f-link').value=pre.link;},10);
+  document.getElementById('modal-ttl').textContent='Log service';
+  document.getElementById('modal').style.display='flex';
+}
+
+function openFromPM(id,name,cat){
+  switchTab('log');
+  setTimeout(()=>openModal({item:name,type:cat,link:id}),50);
+}
+
+function populateItems(){
+  const cat=document.getElementById('f-sec').value;
+  const lk=document.getElementById('f-link');
+  lk.innerHTML='<option value="">— select item —</option>';
+  const sec=SECTIONS.find(s=>s.name===cat);
+  if(sec)sec.items.forEach(it=>{const o=document.createElement('option');o.value=it.id;o.textContent=it.name;lk.appendChild(o);});
+}
+
+function closeModal(){document.getElementById('modal').style.display='none';editId=null;}
+
+async function saveEntry(){
+  const item=document.getElementById('f-item').value.trim();
+  if(!item)return;
+  const o=parseInt(document.getElementById('f-odo').value)||0;
+  const link=document.getElementById('f-link').value;
+  const entry={
+    id:editId||Date.now(),
+    date:document.getElementById('f-date').value,odo:o,item,
+    type:document.getElementById('f-sec').value||'Other',
+    cost:parseFloat(document.getElementById('f-cost').value)||0,
+    labor:parseFloat(document.getElementById('f-labor').value)||0,
+    pn:document.getElementById('f-pn').value.trim(),
+    shop:document.getElementById('f-shop').value.trim(),
+    warranty:parseInt(document.getElementById('f-warranty').value)||null,
+    notes:document.getElementById('f-notes').value.trim(),link
+  };
+  if(editId){const i=logEntries.findIndex(e=>e.id===editId);if(i>-1)logEntries[i]=entry;}
+  else logEntries.unshift(entry);
+  if(link){state[link]=state[link]||{};state[link].lastDone=o;state[link].na=false;}
+  renderLog();renderSchedule();closeModal();
+  const ok=await dbUpsert('repair_log',{id:entry.id,date:entry.date,odo:entry.odo,item:entry.item,type:entry.type,cost:entry.cost,labor:entry.labor||null,pn:entry.pn||null,shop:entry.shop||null,warranty:entry.warranty||null,notes:entry.notes||null,link:entry.link||null});
+  if(link)await dbUpsert('pm_state',{id:link,last_done:o,na:false,updated_at:new Date().toISOString()});
+  toast(ok?'Saved ✓':'Save failed',ok?'ok':'err');
+}
+
+async function delEntry(id){
+  logEntries=logEntries.filter(e=>e.id!==id);
+  renderLog();
+  const ok=await dbDel('repair_log',id);
+  toast(ok?'Deleted ✓':'Delete failed',ok?'ok':'err');
+}
+
+function editEntry(id){
+  const e=logEntries.find(x=>x.id===id);if(!e)return;
+  editId=id;
+  openModal({date:e.date,odo:e.odo,item:e.item,type:e.type,link:e.link});
+  document.getElementById('f-cost').value=e.cost||'';
+  document.getElementById('f-labor').value=e.labor||'';
+  document.getElementById('f-pn').value=e.pn||'';
+  document.getElementById('f-shop').value=e.shop||'';
+  document.getElementById('f-warranty').value=e.warranty||'';
+  document.getElementById('f-notes').value=e.notes||'';
+  document.getElementById('modal-ttl').textContent='Edit entry';
+}
+
+function exportCSV(){
+  const rows=[['Date','Odometer','Item','Section','Cost','Labor','Part Numbers','Shop','Warranty (mi)','Notes']];
+  logEntries.forEach(e=>rows.push([e.date,e.odo,e.item,e.type,e.cost,e.labor||'',e.pn||'',e.shop||'',e.warranty||'',e.notes||'']));
+  const csv=rows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);a.download='repair_log.csv';a.click();
+}
+
+let toastTimer;
+function toast(msg,type='ok'){
+  const el=document.getElementById('toast');
+  el.textContent=msg;el.className='toast show '+type;
+  clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),2500);
+}
+
+init();
+</script>
+</body>
+</html>
